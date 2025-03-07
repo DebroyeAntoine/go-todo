@@ -76,3 +76,40 @@ func TestAddTask(t *testing.T) {
 		AssertErrors(t, err, IdConflict)
 	})
 }
+
+func TestDelTask(t *testing.T) {
+
+	checkDel := func(t testing.TB, got, want Todo) {
+		t.Helper()
+		if !reflect.DeepEqual(want, got) {
+			t.Fatalf("got %v, want %v", got, want)
+		}
+	}
+
+	t.Run("Delete an existing task", func(t *testing.T) {
+		taskToBeDeleted := Task{Id: 10, TaskTitle: "this task will be deleted", Status: Done}
+		list := &Todo{
+			{9, "task will be kept", NotStarted},
+			{10, "this task will be deleted", Done},
+		}
+		err := list.Remove(taskToBeDeleted)
+		got := *list
+		want := Todo{{9, "task will be kept", NotStarted}}
+
+		checkDel(t, got, want)
+		AssertErrors(t, err, nil)
+	})
+
+	t.Run("Delete a non existing task", func(t *testing.T) {
+		taskToBeDeleted := Task{Id: 10, TaskTitle: "this task will be deleted", Status: Done}
+		list := &Todo{
+			{9, "task will be kept", NotStarted},
+		}
+		err := list.Remove(taskToBeDeleted)
+		got := *list
+		want := Todo{{9, "task will be kept", NotStarted}}
+
+		checkDel(t, got, want)
+		AssertErrors(t, err, NotFound)
+	})
+}

@@ -1,7 +1,7 @@
 package todo
 
 import (
-	"reflect"
+	"slices"
 )
 
 type TaskStatus int
@@ -16,6 +16,7 @@ const (
 const (
 	AlreadyPresent = TodoErr("could not add this task because it already exists")
 	IdConflict     = TodoErr("the task id is already stored in the todo")
+	NotFound       = TodoErr("the task is not registered in the todo list")
 )
 
 func (e TodoErr) Error() string {
@@ -30,10 +31,14 @@ type Task struct {
 
 type Todo []Task
 
+func (t *Task) isEqual(task *Task) bool {
+	return t.Id == task.Id && t.Status == task.Status &&
+		t.TaskTitle == task.TaskTitle
+}
+
 func (t *Todo) isExisting(task Task) bool {
 	for _, todoitem := range *t {
-		if todoitem.Id == task.Id && todoitem.TaskTitle == task.TaskTitle &&
-			todoitem.Status == task.Status {
+		if todoitem.isEqual(&task) {
 			return true
 		}
 	}
@@ -64,5 +69,18 @@ func (t *Todo) Add(task Task) error {
 		}
 	}
 	*t = append(*t, task)
+	return nil
+}
+
+func (t *Todo) Remove(task Task) error {
+	if !t.isExisting(task) {
+		return NotFound
+	}
+
+	for i, todoitem := range *t {
+		if todoitem.isEqual(&task) {
+			*t = slices.Delete(*t, i, i+1)
+		}
+	}
 	return nil
 }
